@@ -73,22 +73,22 @@ KIRA is an open-source project that repackages **KRIS (KRAFTON Intelligence Syst
 
 ### 🎬 Demo
 
-<div style="display: flex; gap: 16px; flex-wrap: wrap; justify-content: center; margin: 24px 0;">
-  <div style="text-align: center; max-width: 280px;">
-    <video src="https://kira.krafton-ai.com/videos/Search+PPTX_cut.mp4" width="280" controls style="border-radius: 8px;"></video>
-    <p style="margin-top: 8px; font-size: 14px; color: #666;">Ask your virtual coworker to research and create a presentation</p>
+<div style="display: flex; gap: 12px; justify-content: center; margin: 24px 0;">
+  <div style="text-align: center; flex: 1;">
+    <video src="https://kira.krafton-ai.com/videos/Search+PPTX_cut.mp4" width="100%" controls style="border-radius: 8px;"></video>
+    <p style="margin-top: 8px; font-size: 13px; color: #666;">Ask your virtual coworker to research and create a presentation</p>
   </div>
-  <div style="text-align: center; max-width: 280px;">
-    <video src="https://kira.krafton-ai.com/videos/GitRepo+PDF_cut.mp4" width="280" controls style="border-radius: 8px;"></video>
-    <p style="margin-top: 8px; font-size: 14px; color: #666;">Ask your virtual coworker to review code and summarize in a PDF</p>
+  <div style="text-align: center; flex: 1;">
+    <video src="https://kira.krafton-ai.com/videos/GitRepo+PDF_cut.mp4" width="100%" controls style="border-radius: 8px;"></video>
+    <p style="margin-top: 8px; font-size: 13px; color: #666;">Ask your virtual coworker to review code and summarize in a PDF</p>
   </div>
-  <div style="text-align: center; max-width: 280px;">
-    <video src="https://kira.krafton-ai.com/videos/WebInterface+Wiki_cut.mp4" width="280" controls style="border-radius: 8px;"></video>
-    <p style="margin-top: 8px; font-size: 14px; color: #666;">Talk to your virtual coworker by voice and have them update the wiki</p>
+  <div style="text-align: center; flex: 1;">
+    <video src="https://kira.krafton-ai.com/videos/WebInterface+Wiki_cut.mp4" width="100%" controls style="border-radius: 8px;"></video>
+    <p style="margin-top: 8px; font-size: 13px; color: #666;">Talk to your virtual coworker by voice and have them update the wiki</p>
   </div>
-  <div style="text-align: center; max-width: 280px;">
-    <video src="https://kira.krafton-ai.com/videos/Proactive+BotInThread_cut.mp4" width="280" controls style="border-radius: 8px;"></video>
-    <p style="margin-top: 8px; font-size: 14px; color: #666;">Your virtual coworker proactively offers help based on past work</p>
+  <div style="text-align: center; flex: 1;">
+    <video src="https://kira.krafton-ai.com/videos/Proactive+BotInThread_cut.mp4" width="100%" controls style="border-radius: 8px;"></video>
+    <p style="margin-top: 8px; font-size: 13px; color: #666;">Your virtual coworker proactively offers help based on past work</p>
   </div>
 </div>
 
