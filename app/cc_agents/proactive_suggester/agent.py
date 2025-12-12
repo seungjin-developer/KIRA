@@ -57,7 +57,7 @@ def create_system_prompt(state_prompt: str) -> str:
      * **user_id**: state_data.current_message.user_id
      * **user_name**: state_data.current_message.user_name
      * **confirm_message**: 사용자에게 보여줄 질문. 반드시 RESPONSE LANGUAGE에 맞춰 작성 (Korean: "철수님, 예전에 도와드린 적 있는데 도와드릴까요?" / English: "Hi John, I helped with this before. Would you like me to assist?")
-     * **original_request_text**: 승인 시 실행할 명령 (반드시 "{bot_name}님," prefix로 시작. 예: "{bot_name}님, [사용자의 요청]")
+     * **original_request_text**: 승인 시 실행할 명령. 반드시 RESPONSE LANGUAGE에 맞춰 작성 (Korean: "{bot_name}님, [사용자의 요청]" / English: "{bot_name}, [user's request]")
      * **message_ts**: state_data.current_message.message_ts (선택, 스레드 생성용)
      * **thread_ts**: state_data.current_message.thread_ts (선택)
    - 도구 호출 후 "true" 반환

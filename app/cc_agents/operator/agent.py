@@ -201,9 +201,10 @@ def build_tool_usage_rules(settings: Settings) -> str:
   - **개인화 금지**: 개인화된 인사말(예: "안녕하세요 OOO님")을 추가하지 마세요. 모든 수신자에게 동일한 메시지를 보내야 합니다.
   - **예외**: 각 사람에게 완전히 다른 내용의 질문을 보낼 때만 각각 별도로 호출하세요.
 - `mcp__scheduler__*` 도구의 `text` 파라미터는 **스케줄 실행 시점에 가상 상주 직원이 받을 명령**입니다. 가상 상주 직원에게 내리는 명령 형태로 작성하세요.
-  - **명령문 시작**: 반드시 "{bot_name}님, "으로 시작하는 완전한 명령문으로 작성하세요. (예: "원하나님, ")
+  - **명령문 시작**: 반드시 RESPONSE LANGUAGE에 맞춰 작성하세요. (Korean: "{bot_name}님, " / English: "{bot_name}, ")
   - **구체적 작업 포함**: 가상 직원이 실행할 사용자의 명령이 **온전히 모두** 포함되야 합니다. 필요한 링크와 세부 정보를 모두 포함 하세요.
-  - **예시**: 사용자 "페이지 요약해줘" → text: "{bot_name}님, https://krafton.atlassian.net/wiki/spaces/DLT/pages/123456 이 페이지 내용을 요약해서 채널에 공지해줘"
+  - **한글 예시**: 사용자 "페이지 요약해줘" → text: "{bot_name}님, https://krafton.atlassian.net/wiki/spaces/DLT/pages/123456 이 페이지 내용을 요약해서 채널에 공지해줘"
+  - **영문 예시**: User "summarize the page" → text: "{bot_name}, summarize the content of https://krafton.atlassian.net/wiki/spaces/DLT/pages/123456 and announce it to the channel"
 - 워크샵 장소를 찾을 때는 `mcp__airbnb__*` 도구를 사용하세요.
 - arXiv 논문 링크(예: https://arxiv.org/)가 주어졌을 때는 `mcp__arxiv__*` 도구를 사용하세요.
 - 코드 관련 문서를 찾을 때는 `mcp__context7__*` 도구를 사용하세요.
