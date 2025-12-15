@@ -44,13 +44,19 @@ KIRA is an **AI virtual coworker** that runs as a desktop application. Once inst
 
 ### Two Usage Modes
 
-**🤖 Virtual Coworker Mode (Recommended)**
-- Dedicated bot account acting as a team member
-- Transparent work shared with the entire team
+**🤖 Bot Mode**
+- Install on **your computer**
+- Use your own Slack account or bot app
+- Personal AI assistant that you manage
+- Stops when your computer is off
 
-**👤 Assistant Mode**
-- Uses your personal account
-- Acts as your private assistant
+**👤 Virtual Employee Mode**
+- Install on a **dedicated computer** (or VM/server)
+- Create a dedicated Slack account for the AI (e.g., "KIRA Kim")
+- Runs 24/7 independently as a real team member
+- Shared by the entire team
+
+> 💡 **KRAFTON Use Case**: KRAFTON provides a dedicated company account and computer to run KIRA as a virtual employee, just like onboarding a new hire.
 
 ---
 
@@ -220,7 +226,7 @@ KIRA uses a hierarchical queue system to handle concurrent messages efficiently:
 
 **Why this design?**
 - **Channel Queues**: Users in different channels get fast responses without blocking each other
-- **Orchestrator Queue**: Heavy Claude API calls are rate-limited to prevent 429 errors
+- **Orchestrator Queue**: Limits concurrent heavy tasks to prevent excessive CPU/memory usage
 - **Memory Queue**: Single worker ensures no conflicts when writing to local memory files
 
 ---

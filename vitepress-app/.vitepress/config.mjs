@@ -219,7 +219,7 @@ gtag('config', 'G-05X6YL37F9');`],
     },
 
     footer: {
-      message: 'Made with ❤️ by <a href="https://www.krafton.ai" target="_blank" rel="noopener">KRAFTON AI</a>',
+      message: 'Made with ❤️ by <a href="https://www.krafton.ai" target="_blank" rel="noopener">KRAFTON AI</a><br/>Technical Support: <a href="mailto:batteryho@krafton.com">batteryho@krafton.com</a> | Business Inquiry: <a href="mailto:enzo@krafton.com">enzo@krafton.com</a>',
       copyright: 'Copyright © 2025-present KIRA'
     },
 

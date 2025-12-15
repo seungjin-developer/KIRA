@@ -24,28 +24,52 @@ Getting started with KIRA is really simple. Follow this guide and you'll be chat
 
 KIRA can be used in two different modes. **Choose your preferred mode first.**
 
-::: info Bot Mode vs Virtual Coworker Mode
-| Feature | Bot Mode | Virtual Coworker Mode |
+<img src="/images/screenshots/mode-comparison.png" alt="Bot Mode vs Virtual Employee Mode" style="max-width: 550px; width: 100%;" />
+
+::: info Mode Comparison
+| Feature | Bot Mode | Virtual Employee Mode |
 |---------|----------|----------------------|
+| **Installation** | Your computer | Dedicated computer/VM/server |
+| **Slack Account** | Your account or bot app | Dedicated account for AI |
 | **Token** | Bot Token (`xoxb-...`) | User Token (`xoxp-...`) |
 | **Display** | Shows as a bot | Shows as a real user |
-| **Best for** | Team-shared AI assistant | Personal AI secretary, delegation |
+| **Uptime** | When your computer is on | 24/7 (always on) |
+| **Operator** | You | Independent operation |
 | **Setup** | Easy | Slightly complex |
 :::
 
-### 🤖 Bot Mode (Default)
-- KIRA appears as a **bot**
-- Shared AI assistant for the entire team
-- Uses Slack App's **Bot Token**
+> 💡 **KRAFTON Use Case**: KRAFTON provides a dedicated company account and computer to run KIRA as a virtual employee, just like onboarding a new hire.
 
-### 👤 Virtual Coworker Mode
-- KIRA appears as a **real user**
-- Acts on your behalf for messages and tasks
-- Uses Slack App's **User Token**
-- Creating a dedicated Slack account is recommended
+### 🤖 Bot Mode
+
+**Use KIRA as a personal AI assistant on your computer.**
+
+- Install KIRA on **your computer**
+- Use **your Slack account** or bot app
+- You manage and operate it directly
+- Stops when your computer is off
+
+**Best for:**
+- Personal work assistance
+- Using AI assistant alone
+- Quick and simple setup
+
+### 👤 Virtual Employee Mode
+
+**Run KIRA as a team-shared AI coworker on a dedicated computer.**
+
+- Install KIRA on a **dedicated computer** (or VM/server)
+- Create a **dedicated Slack account** for the AI (e.g., "KIRA Kim")
+- Runs 24/7 independently
+- Participates in channels like a real team member
+
+**Best for:**
+- Team-wide shared AI coworker
+- 24/7 always-on operation
+- Operating like a real team member
 
 ::: warning Choose Your Mode Before Proceeding
-This guide has different setup steps depending on your chosen mode. Follow the **Bot Mode** or **Virtual Coworker Mode** instructions at each step.
+This guide has different setup steps depending on your chosen mode. Follow the **Bot Mode** or **Virtual Employee Mode** instructions at each step.
 :::
 
 ---
