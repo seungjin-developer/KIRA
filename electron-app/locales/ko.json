@@ -35,7 +35,8 @@
       "computerUse": "Computer Use",
       "webServer": "웹 서버 / 음성 수신 채널",
       "activeChannels": "능동 수신 채널",
-      "proactive": "선제적 제안 기능"
+      "proactive": "선제적 제안 기능",
+      "debug": "디버그"
     },
     "beta": "beta"
   },
@@ -185,5 +186,9 @@
     "instructionPlaceholder": "이 MCP를 언제, 어떻게 사용할지 설명하세요",
     "toolHint": "이름을 입력하면 도구 형식이 표시됩니다",
     "toolHintFormat": "다음의 경우에 반드시 mcp__{name}__*를 사용하세요: {instruction}"
+  },
+  "debug": {
+    "slackMessages": "에러 시 Slack 메시지 전송",
+    "slackMessagesDesc": "에이전트 에러 발생 시 Slack으로 알림 메시지를 전송합니다"
   }
 }

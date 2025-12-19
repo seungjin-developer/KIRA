@@ -15,7 +15,7 @@ from claude_agent_sdk import (
     ResultMessage,
 )
 
-from app.cc_tools.slack.slack_tools import create_slack_mcp_server
+from app.cc_tools.slack.slack_tools import create_slack_mcp_server, get_slack_client
 from app.cc_tools.scheduler.scheduler_tools import create_scheduler_mcp_server
 from app.cc_tools.x.x_tools import create_x_mcp_server
 from app.cc_tools.meeting_transcription.meeting_transcription_tools import (
@@ -85,7 +85,7 @@ def build_mcp_servers_dict(settings: Settings) -> dict:
     if settings.GITLAB_ENABLED:
         mcp_servers["gitlab"] = {
             "command": "npx",
-            "args": ["-y", "@zereight/mcp-gitlab"],
+            "args": ["mcp-cache", "npx", "-y", "@zereight/mcp-gitlab"],
             "env": {
                 "GITLAB_PERSONAL_ACCESS_TOKEN": settings.GITLAB_PERSONAL_ACCESS_TOKEN,
                 "GITLAB_API_URL": settings.GITLAB_API_URL,
@@ -100,7 +100,7 @@ def build_mcp_servers_dict(settings: Settings) -> dict:
     if settings.MS365_ENABLED:
         mcp_servers["ms365"] = {
             "command": "npx",
-            "args": ["-y", "@batteryho/lokka-cached"],
+            "args": ["mcp-cache", "npx", "-y", "@batteryho/lokka-cached"],
             "env": {
                 "TENANT_ID": settings.MS365_TENANT_ID,
                 "CLIENT_ID": settings.MS365_CLIENT_ID,
@@ -112,14 +112,14 @@ def build_mcp_servers_dict(settings: Settings) -> dict:
     if settings.ATLASSIAN_ENABLED:
         mcp_servers["atlassian"] = {
             "command": "npx",
-            "args": ["-y", "mcp-remote", "https://mcp.atlassian.com/v1/sse"],
+            "args": ["mcp-cache", "npx", "-y", "mcp-remote", "https://mcp.atlassian.com/v1/sse"],
         }
 
     # MCP 설정 - TABLEAU MCP
     if settings.TABLEAU_ENABLED:
         mcp_servers["tableau"] = {
             "command": "npx",
-            "args": ["-y", "@tableau/mcp-server@latest"],
+            "args": ["mcp-cache", "npx", "-y", "@tableau/mcp-server@latest"],
             "env": {
                 "SERVER": settings.TABLEAU_SERVER,
                 "SITE_NAME": settings.TABLEAU_SITE_NAME,
@@ -536,7 +536,7 @@ async def call_operator_agent(
 
                 # 최종 메시지가 설정되지 않았을 경우 처리
                 if not final_message:
-                    final_message = "응답을 생성할 수 없었습니다."
+                    final_message = "Unable to generate a response."
                     logging.warning(
                         f"[OPERATOR_AGENT] No final message received, using default"
                     )
@@ -574,9 +574,29 @@ async def call_operator_agent(
                     # 재시도 횟수 초과 또는 다른 에러
                     logging.error(f"[OPERATOR_AGENT] Error occurred: {e}")
                     if is_context_error:
-                        final_message = "컨텍스트가 너무 커서 처리할 수 없습니다. 새로운 대화를 시작해주세요."
+                        final_message = "The context is too large to process. Please start a new conversation."
+                    elif "maximum buffer size" in error_msg:
+                        final_message = "The response data is too large to process. Please request a smaller scope."
                     elif not final_message:
-                        final_message = "작업 처리 중 오류가 발생했습니다."
+                        final_message = "An error occurred while processing the task."
+
+                    # 디버그 모드일 때만 에러 메시지를 Slack으로 전송
+                    if settings.DEBUG_SLACK_MESSAGES_ENABLED:
+                        try:
+                            slack_client = get_slack_client()
+                            channel_id = message_data.get("channel_id")
+                            thread_ts = message_data.get("thread_ts") or message_data.get("ts")
+
+                            if channel_id:
+                                await slack_client.chat_postMessage(
+                                    channel=channel_id,
+                                    text=f"⚠️ {final_message}",
+                                    thread_ts=thread_ts
+                                )
+                                logging.info(f"[OPERATOR_AGENT] Error message sent to Slack: {final_message}")
+                        except Exception as slack_error:
+                            logging.error(f"[OPERATOR_AGENT] Failed to send error to Slack: {slack_error}")
+
                     break
 
     # Slack에 메시지 전송 (에이전트 레벨로 올림)

@@ -114,6 +114,9 @@ class Settings(BaseSettings):
     DYNAMIC_SUGGESTER_ENABLED: bool = False
     DYNAMIC_SUGGESTER_INTERVAL: int = 15
 
+    # 디버그
+    DEBUG_SLACK_MESSAGES_ENABLED: bool = False
+
     def model_post_init(self, __context):
         load_dotenv("app/config/env/dev.env", override=True)
 

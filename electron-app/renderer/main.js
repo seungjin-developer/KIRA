@@ -121,7 +121,9 @@ const fields = [
   'WEB_MS365_TENANT_ID',
   // 선제적 제안 기능
   'DYNAMIC_SUGGESTER_ENABLED',
-  'DYNAMIC_SUGGESTER_INTERVAL'
+  'DYNAMIC_SUGGESTER_INTERVAL',
+  // 디버그
+  'DEBUG_SLACK_MESSAGES_ENABLED'
 ];
 
 // MCP checkbox to fields mapping

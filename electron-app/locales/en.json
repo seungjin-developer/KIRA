@@ -35,7 +35,8 @@
       "computerUse": "Computer Use",
       "webServer": "Web Server / Voice Input",
       "activeChannels": "Active Receivers",
-      "proactive": "Proactive Suggestions"
+      "proactive": "Proactive Suggestions",
+      "debug": "Debug"
     },
     "beta": "beta"
   },
@@ -185,5 +186,9 @@
     "instructionPlaceholder": "Describe when and how to use this MCP",
     "toolHint": "Enter a name to see the tool format",
     "toolHintFormat": "Use mcp__{name}__* for the following: {instruction}"
+  },
+  "debug": {
+    "slackMessages": "Send Slack Messages on Error",
+    "slackMessagesDesc": "Send notification messages to Slack when agent errors occur"
   }
 }

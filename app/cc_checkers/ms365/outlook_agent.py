@@ -152,7 +152,7 @@ async def call_email_task_extractor(
     mcp_servers = {
         "ms365": {
             "command": "npx",
-            "args": ["-y", "@batteryho/lokka-cached"],
+            "args": ["mcp-cache", "npx", "-y", "@batteryho/lokka-cached"],
             "env": {
                 "TENANT_ID": settings.MS365_TENANT_ID,
                 "CLIENT_ID": settings.MS365_CLIENT_ID,

@@ -193,7 +193,7 @@ URL: {page_url}
     mcp_servers = {
         "atlassian": {
             "command": "npx",
-            "args": ["-y", "mcp-remote", "https://mcp.atlassian.com/v1/sse"]
+            "args": ["mcp-cache", "npx", "-y", "mcp-remote", "https://mcp.atlassian.com/v1/sse"]
         }
     }
 

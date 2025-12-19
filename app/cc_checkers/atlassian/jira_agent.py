@@ -166,7 +166,7 @@ URL: {issue_url}
     mcp_servers = {
         "atlassian": {
             "command": "npx",
-            "args": ["-y", "mcp-remote", "https://mcp.atlassian.com/v1/sse"],
+            "args": ["mcp-cache", "npx", "-y", "mcp-remote", "https://mcp.atlassian.com/v1/sse"],
         },
         "jira_tasks": create_jira_tasks_mcp_server(),
     }
