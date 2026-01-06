@@ -500,23 +500,27 @@ async function startServer() {
   };
 
   pythonProcess.stdout.on('data', (data) => {
-    const logLine = data.toString();
-    if (mainWindow && !mainWindow.isDestroyed()) {
-      mainWindow.webContents.send('server-log', {
-        type: parseLogLevel(logLine),
-        message: logLine
-      });
-    }
+    const lines = data.toString().split('\n').filter(line => line.trim());
+    lines.forEach(logLine => {
+      if (mainWindow && !mainWindow.isDestroyed()) {
+        mainWindow.webContents.send('server-log', {
+          type: parseLogLevel(logLine),
+          message: logLine
+        });
+      }
+    });
   });
 
   pythonProcess.stderr.on('data', (data) => {
-    const logLine = data.toString();
-    if (mainWindow && !mainWindow.isDestroyed()) {
-      mainWindow.webContents.send('server-log', {
-        type: parseLogLevel(logLine),
-        message: logLine
-      });
-    }
+    const lines = data.toString().split('\n').filter(line => line.trim());
+    lines.forEach(logLine => {
+      if (mainWindow && !mainWindow.isDestroyed()) {
+        mainWindow.webContents.send('server-log', {
+          type: parseLogLevel(logLine),
+          message: logLine
+        });
+      }
+    });
   });
 
   // Handle process exit

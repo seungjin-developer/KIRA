@@ -4,7 +4,11 @@ import os
 import sys
 
 # Setup logging first
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(levelname)s - %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S"
+)
 
 # DEBUG: Check environment variables at startup
 logging.info(f"[STARTUP DEBUG] CLAUDE_CODE_CLI_PATH={os.environ.get('CLAUDE_CODE_CLI_PATH', 'NOT SET')}")

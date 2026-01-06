@@ -3,6 +3,17 @@ import json
 import uuid
 import logging
 from datetime import datetime
+
+# Scheduler 전용 logger (별도 포맷)
+scheduler_logger = logging.getLogger("SCHEDULER")
+scheduler_logger.propagate = False  # 부모 logger로 전파 안 함
+_handler = logging.StreamHandler()
+_handler.setFormatter(logging.Formatter(
+    "%(asctime)s - %(levelname)s - [%(name)s] %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S"
+))
+scheduler_logger.addHandler(_handler)
+scheduler_logger.setLevel(logging.INFO)
 from typing import List, Dict, Any
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.cron import CronTrigger  # CronTrigger 임포트 추가
@@ -62,16 +73,16 @@ async def scheduled_message_wrapper(message: dict, schedule_id: str, schedule_na
         schedule_name: 스케줄 이름
     """
     try:
-        logging.info(f"[SCHEDULER] 🔔 Executing schedule: [{schedule_name}] (ID: {schedule_id})")
-        logging.info(f"[SCHEDULER]   └─ Channel: {message.get('channel')}, User: {message.get('user')}")
-        logging.info(f"[SCHEDULER]   └─ Text preview: {message.get('text', '')[:50]}...")
+        scheduler_logger.info(f"🔔 Executing: [{schedule_name}] (ID: {schedule_id})")
+        scheduler_logger.info(f"  └─ Channel: {message.get('channel')}, User: {message.get('user')}")
+        scheduler_logger.info(f"  └─ Text preview: {message.get('text', '')[:50]}...")
 
         await enqueue_message(message)
 
-        logging.info(f"[SCHEDULER] ✅ Schedule executed successfully: [{schedule_name}] (ID: {schedule_id})")
+        scheduler_logger.info(f"✅ Executed successfully: [{schedule_name}] (ID: {schedule_id})")
     except Exception as e:
-        logging.error(f"[SCHEDULER] ❌ Schedule execution failed: [{schedule_name}] (ID: {schedule_id})")
-        logging.error(f"[SCHEDULER]   └─ Error: {type(e).__name__}: {e}")
+        scheduler_logger.error(f"❌ Execution failed: [{schedule_name}] (ID: {schedule_id})")
+        scheduler_logger.error(f"  └─ Error: {type(e).__name__}: {e}")
 
 
 async def reload_schedules_from_file():
@@ -82,9 +93,9 @@ async def reload_schedules_from_file():
         for job in jobs:
             if job.func == scheduled_message_wrapper:
                 scheduler.remove_job(job.id)
-                logging.debug(f"[SCHEDULER] Removed existing schedule job: {job.name} (ID: {job.id})")
+                scheduler_logger.debug(f"Removed existing job: {job.name} (ID: {job.id})")
     except Exception as e:
-        logging.warning(f"기존 스케줄 삭제 중 오류 발생 (첫 실행 시 정상): {e}")
+        scheduler_logger.warning(f"기존 스케줄 삭제 중 오류 발생 (첫 실행 시 정상): {e}")
 
     schedules = read_schedules_from_file()
     count = 0
@@ -116,16 +127,16 @@ async def reload_schedules_from_file():
                     trigger=CronTrigger.from_crontab(schedule_value),
                     **job_args,
                 )
-                logging.info(f"[SCHEDULER] 📅 Registered cron schedule: [{schedule_name}] (ID: {schedule_id}), pattern: {schedule_value}")
+                scheduler_logger.info(f"📅 Registered cron: [{schedule_name}] (ID: {schedule_id}), pattern: {schedule_value}")
             elif schedule_type == "date":
                 # 과거 시간인 경우 스키핑
                 try:
                     run_date = datetime.fromisoformat(schedule_value.replace('Z', '+00:00'))
                     if run_date <= datetime.now(run_date.tzinfo):
-                        logging.info(f"[SCHEDULER] ⏭️  Skipping past schedule: [{schedule_name}] (ID: {schedule_id}), time: {schedule_value}")
+                        scheduler_logger.info(f"⏭️ Skipping past: [{schedule_name}] (ID: {schedule_id}), time: {schedule_value}")
                         continue
                 except (ValueError, AttributeError) as e:
-                    logging.error(f"[SCHEDULER] ❌ Invalid date format: [{schedule_name}] (ID: {schedule_id}), value: {schedule_value}, error: {e}")
+                    scheduler_logger.error(f"❌ Invalid date format: [{schedule_name}] (ID: {schedule_id}), value: {schedule_value}, error: {e}")
                     continue
 
                 scheduler.add_job(
@@ -134,9 +145,9 @@ async def reload_schedules_from_file():
                     run_date=schedule_value,
                     **job_args
                 )
-                logging.info(f"[SCHEDULER] 📅 Registered one-time schedule: [{schedule_name}] (ID: {schedule_id}), time: {schedule_value}")
+                scheduler_logger.info(f"📅 Registered one-time: [{schedule_name}] (ID: {schedule_id}), time: {schedule_value}")
 
             count += 1
         except Exception as e:
-            logging.error(f"[SCHEDULER] ❌ Failed to register schedule: [{schedule.get('name')}] (ID: {schedule.get('id')}), error: {e}")
-    logging.info(f"총 {count}개의 스케줄을 성공적으로 리로드했습니다.")
+            scheduler_logger.error(f"❌ Failed to register: [{schedule.get('name')}] (ID: {schedule.get('id')}), error: {e}")
+    scheduler_logger.info(f"✅ 총 {count}개 스케줄 리로드 완료")

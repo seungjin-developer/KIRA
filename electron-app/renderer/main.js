@@ -163,6 +163,8 @@ const suggesterMapping = {
 let serverRunning = false;
 let waitingForInput = false;
 let currentBotName = 'KIRA';
+let currentLogFilter = 'all';  // 'all' or 'kira.scheduler'
+let allLogs = [];  // Store all logs for filtering
 
 // Update main message with translated text and bot name
 function updateMainMessage(botName) {
@@ -207,6 +209,9 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Initialize i18n
   currentLang = getCurrentLanguage();
   updatePageTranslations();
+
+  // Initialize log tabs
+  initLogTabs();
 
   // Check terms agreement on first run
   if (!checkTermsAgreement()) {
@@ -821,6 +826,7 @@ async function startServer() {
 
     // Clear previous logs
     logContainer.innerHTML = '';
+    allLogs = [];  // Reset log storage
 
     // Re-register log listener (in case it was removed on stop)
     window.api.onServerLog((data) => {
@@ -893,6 +899,28 @@ function updateServerStatus() {
 
 // Append Log
 function appendLog(data) {
+  // Store log for filtering
+  allLogs.push(data);
+
+  // Only display if matches current filter
+  if (shouldShowLog(data)) {
+    renderLogLine(data);
+  }
+
+  // Check if log contains input prompts
+  checkForInputPrompt(data.message);
+}
+
+// Check if log should be shown based on current filter
+function shouldShowLog(data) {
+  if (currentLogFilter === 'all') return true;
+  // Check if message contains the filter tag (e.g., '[SCHEDULER]')
+  const matches = data.message && data.message.includes(currentLogFilter);
+  return matches;
+}
+
+// Render a single log line to the container
+function renderLogLine(data) {
   const logContainer = document.getElementById('logContainer');
 
   // Remove placeholder if exists
@@ -918,9 +946,34 @@ function appendLog(data) {
 
   // Auto-scroll to bottom
   logContainer.scrollTop = logContainer.scrollHeight;
+}
 
-  // Check if log contains input prompts
-  checkForInputPrompt(data.message);
+// Re-render all logs with current filter
+function refreshLogDisplay() {
+  const logContainer = document.getElementById('logContainer');
+  logContainer.innerHTML = '';
+
+  allLogs.forEach(data => {
+    if (shouldShowLog(data)) {
+      renderLogLine(data);
+    }
+  });
+}
+
+// Initialize log tab buttons
+function initLogTabs() {
+  const tabs = document.querySelectorAll('.log-tab');
+  tabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      // Update active state
+      tabs.forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+
+      // Update filter and refresh display
+      currentLogFilter = tab.dataset.filter;
+      refreshLogDisplay();
+    });
+  });
 }
 
 // Check for input prompts in logs
