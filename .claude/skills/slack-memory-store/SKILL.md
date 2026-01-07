@@ -471,4 +471,4 @@ This skill is designed to work seamlessly with:
 - Calendar APIs for meeting notes
 - Any custom data sources via the flexible add_memory interface
 
-The memory structure is AI-agent-friendly: index.md provides rapid overview, and all content is in Markdown for easy parsing and understanding.
+The memory structure is AI-agent-friendly: index.md provides rapid overview, and all content is in Markdown for easy parsing and understanding. 

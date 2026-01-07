@@ -183,5 +183,6 @@ def main():
     
     print("\n📊 Index successfully updated!")
 
+
 if __name__ == "__main__":
     main()

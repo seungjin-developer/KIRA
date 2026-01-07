@@ -286,4 +286,4 @@ after_delete_memory():
 
 scheduled_task():  # 1시간마다
     update_index()
-```
+``` 

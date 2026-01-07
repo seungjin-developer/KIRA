@@ -375,4 +375,4 @@ misc/
 ### 이동 후 필수 작업
 - 메타데이터의 `category` 필드 업데이트
 - `related_to`로 참조하던 파일들 경로 업데이트
-- index.md 업데이트
+- index.md 업데이트 

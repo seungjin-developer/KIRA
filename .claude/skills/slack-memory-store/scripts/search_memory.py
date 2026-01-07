@@ -192,5 +192,6 @@ def main():
         print(f"Error: Unknown search type '{search_type}'")
         sys.exit(1)
 
+
 if __name__ == "__main__":
     main()

@@ -113,6 +113,7 @@ structure_type: slack-memory-store
     metadata_path = base_path / ".memory_metadata"
     metadata_path.write_text(metadata_content, encoding='utf-8')
 
+
 if __name__ == "__main__":
     if len(sys.argv) < 2:
         print("Usage: python init_memory.py <memory_path>")

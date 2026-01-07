@@ -312,4 +312,4 @@ tasks/
 
 - **[cleanup-patterns.md](references/cleanup-patterns.md)** - 정리 패턴 및 LLM 판단 기준
 - **[deduplication-rules.md](references/deduplication-rules.md)** - 중복 탐지 및 병합 규칙
-- **[misclassification-rules.md](references/misclassification-rules.md)** - 오분류 탐지 및 이동 규칙
+- **[misclassification-rules.md](references/misclassification-rules.md)** - 오분류 탐지 및 이동 규칙 

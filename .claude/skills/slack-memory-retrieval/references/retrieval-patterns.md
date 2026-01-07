@@ -426,4 +426,4 @@ Index의 Recent Updates는 10개만 표시
 User: "디자인 관련 피드백"
 → feedback/ 폴더에서 "디자인" 키워드 검색
 → tags에 "design" 포함된 파일 우선
-```
+``` 

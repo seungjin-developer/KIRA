@@ -378,5 +378,6 @@ def main():
 
     print(f"\n📍 Location: {directory}/{filename}")
 
+
 if __name__ == "__main__":
     main()
