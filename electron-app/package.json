@@ -79,8 +79,7 @@
             "x64"
           ]
         }
-      ],
-      "publisherName": "KRAFTON AI"
+      ]
     },
     "nsis": {
       "oneClick": false,
