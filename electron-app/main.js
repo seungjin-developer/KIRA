@@ -103,6 +103,7 @@ function getCurrentLanguage() {
 const CONFIG_DIR = path.join(os.homedir(), '.kira');
 const CONFIG_FILE = path.join(CONFIG_DIR, 'config.env');
 const LOG_FILE = path.join(CONFIG_DIR, 'server.log');
+const PID_FILE = path.join(CONFIG_DIR, 'server.pid');
 
 // UV and npm paths are now provided by platform-utils
 const UV_POSSIBLE_PATHS = getUvPossiblePaths();
@@ -536,6 +537,14 @@ async function startServer() {
     detached: process.platform !== 'win32'  // Create process group on Unix
   });
 
+  // Save PID to file for reliable cleanup
+  try {
+    fs.writeFileSync(PID_FILE, pythonProcess.pid.toString());
+    log.info('Saved server PID to file:', pythonProcess.pid);
+  } catch (err) {
+    log.error('Failed to save PID file:', err.message);
+  }
+
   // Pipe logs
   // pythonProcess.stdout.pipe(logStream);
   // pythonProcess.stderr.pipe(logStream);
@@ -604,51 +613,56 @@ function stopServer() {
   pythonProcess = null;
 
   if (isWindows) {
-    // Windows: Use taskkill to terminate process tree
+    // Windows: Kill by PID tree first, then kill orphaned processes by project path
+    // Step 1: Try to kill process tree by PID
     try {
-      // /T = terminate child processes, /F = force
       execSync(`taskkill /PID ${pid} /T /F`, { stdio: 'ignore' });
-      console.log('Terminated process tree for PID', pid);
+      console.log('Taskkill /T executed for PID', pid);
     } catch (err) {
-      console.error('Error terminating process:', err.message);
+      // Process may already be gone
     }
 
-    // Also kill any processes using port 8000
-    try {
-      // Find process using port 8000
-      const netstatOutput = execSync('netstat -ano | findstr :8000 | findstr LISTENING', { encoding: 'utf8' });
-      const lines = netstatOutput.trim().split('\n');
-      for (const line of lines) {
-        const parts = line.trim().split(/\s+/);
-        const portPid = parts[parts.length - 1];
-        if (portPid && portPid !== pid.toString()) {
-          try {
-            execSync(`taskkill /PID ${portPid} /F`, { stdio: 'ignore' });
-            console.log('Killed process on port 8000:', portPid);
-          } catch (e) {
-            // Process may already be gone
-          }
+    // Step 2: Kill orphaned python processes that belong to THIS project
+    // Find processes by project path, then recursively kill them and their children
+    const appPath = getPythonPath().replace(/\\/g, '\\\\');  // Escape backslashes for regex
+    const killOrphanScript = `
+      function Kill-Tree($id) {
+        Get-CimInstance Win32_Process | Where-Object { $_.ParentProcessId -eq $id } | ForEach-Object {
+          Kill-Tree $_.ProcessId
+          Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue
         }
       }
+      Get-CimInstance Win32_Process | Where-Object {
+        $_.Name -eq 'python.exe' -and $_.CommandLine -match '${appPath}'
+      } | ForEach-Object {
+        Kill-Tree $_.ProcessId
+        Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue
+      }
+    `;
+
+    try {
+      execSync(`powershell -NoProfile -Command "${killOrphanScript}"`, { stdio: 'ignore' });
+      console.log('Killed orphaned Python processes for project:', appPath);
     } catch (err) {
-      // No process on port 8000, which is fine
+      // No orphaned processes or PowerShell failed
+    }
+
+    // Cleanup PID file
+    try {
+      if (fs.existsSync(PID_FILE)) {
+        fs.unlinkSync(PID_FILE);
+      }
+    } catch (err) {
+      // Ignore cleanup errors
     }
   } else {
-    // Unix: Kill all related processes (uv, python, and port 8000)
-    const killCommand = `
-      # Kill process group
-      kill -TERM -${pid} 2>/dev/null || true
-      # Kill uv and python processes by name
-      pkill -TERM -f "uv run python.*app.main" 2>/dev/null || true
-      pkill -TERM -f "python.*app.main" 2>/dev/null || true
-      # Kill port 8000 processes
-      lsof -ti:8000 | xargs kill -TERM 2>/dev/null || true
-    `;
+    // Unix: Kill process group (safe - only kills our processes)
+    const killCommand = `kill -TERM -${pid} 2>/dev/null || kill -TERM ${pid} 2>/dev/null || true`;
 
     try {
       const killProc = spawn('sh', ['-c', killCommand]);
       killProc.on('close', () => {
-        console.log('Sent SIGTERM to all server processes');
+        console.log('Sent SIGTERM to process group', pid);
       });
     } catch (err) {
       console.error('Error sending SIGTERM:', err);
@@ -656,23 +670,24 @@ function stopServer() {
 
     // Force kill after 2 seconds if still running
     setTimeout(() => {
-      const forceKillCommand = `
-        # Force kill process group
-        kill -KILL -${pid} 2>/dev/null || true
-        # Force kill uv and python processes
-        pkill -KILL -f "uv run python.*app.main" 2>/dev/null || true
-        pkill -KILL -f "python.*app.main" 2>/dev/null || true
-        # Force kill port 8000
-        lsof -ti:8000 | xargs kill -KILL 2>/dev/null || true
-      `;
+      const forceKillCommand = `kill -KILL -${pid} 2>/dev/null || kill -KILL ${pid} 2>/dev/null || true`;
 
       try {
         const forceKillProc = spawn('sh', ['-c', forceKillCommand]);
         forceKillProc.on('close', () => {
-          console.log('Force killed all server processes');
+          console.log('Force killed process group', pid);
         });
       } catch (err) {
         console.error('Error during force kill:', err);
+      }
+
+      // Cleanup PID file
+      try {
+        if (fs.existsSync(PID_FILE)) {
+          fs.unlinkSync(PID_FILE);
+        }
+      } catch (e) {
+        // Ignore cleanup errors
       }
     }, 2000);
   }
