@@ -1,28 +1,32 @@
 # KIRA GitHub Actions Workflow
-# macOS self-hosted runner에서 실행됩니다 (Apple 코드 사이닝 필요)
-# 빌드 PC: macOS self-hosted runner (kira-tags와 동일한 환경)
+# Builds and deploys using 3 parallel jobs:
+#   - deploy-mac: Builds macOS app on self-hosted runner (with Apple code signing)
+#   - deploy-windows: Builds Windows app on GitHub-hosted Windows runner
+#   - deploy-docs: Deploys VitePress documentation on GitHub-hosted Ubuntu runner
 
 name: Build and Deploy
 
 on:
   push:
     tags:
-      - 'v*'  # 태그가 push될 때만 실행 (예: v0.9.16)
+      - 'v*'  # Runs only when a tag is pushed (e.g., v0.9.16)
 
 env:
   NODE_VERSION: "22"
 
 jobs:
-  deploy:
+  # ===========================
+  # Job 1: macOS Build
+  # ===========================
+  deploy-mac:
     name: Build and Deploy macOS App
-    runs-on: self-hosted  # macOS self-hosted runner (Apple 코드 사이닝 필요)
-    timeout-minutes: 120  # Notarization 대기 시간 고려
+    runs-on: self-hosted  # macOS self-hosted runner (requires Apple code signing)
+    timeout-minutes: 120  # Allows time for notarization
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # Load nvm (Node Version Manager)
       - name: Load nvm and verify Node.js
         run: |
           export NVM_DIR="$HOME/.nvm"
@@ -30,79 +34,48 @@ jobs:
           node --version
           npm --version
 
-      # Keychain unlock (코드 사이닝 비밀번호 팝업 방지)
       - name: Unlock Keychain
         run: |
           security unlock-keychain -p "${{ secrets.KEYCHAIN_PASSWORD }}" ~/Library/Keychains/login.keychain-db
           security set-keychain-settings -t 7200 ~/Library/Keychains/login.keychain-db
 
-      # AWS CLI 확인
       - name: Setup AWS CLI
         run: |
           which aws || brew install awscli
           aws --version
 
-      # Electron 앱 dependencies 설치
-      - name: Install Electron app dependencies
+      - name: Install dependencies
         run: |
           export NVM_DIR="$HOME/.nvm"
           [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
           cd electron-app && npm ci
 
-      # VitePress dependencies 설치
-      - name: Install VitePress dependencies
-        run: |
-          export NVM_DIR="$HOME/.nvm"
-          [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
-          cd vitepress-app && npm ci
-
-      # 태그에서 버전 추출 및 적용
       - name: Extract version from tag and update package.json
         run: |
           export NVM_DIR="$HOME/.nvm"
           [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+          VERSION=${GITHUB_REF_NAME#v}
+          echo "📦 Version: $VERSION"
+          cd electron-app
+          npm version $VERSION --no-git-tag-version
 
-          if [ -n "$GITHUB_REF_NAME" ]; then
-            # 태그에서 버전 추출 (v0.9.16 → 0.9.16)
-            VERSION=${GITHUB_REF_NAME#v}
-            echo "📦 태그 버전: $GITHUB_REF_NAME → $VERSION"
-
-            # Electron 앱 package.json 버전 업데이트
-            cd electron-app
-            npm version $VERSION --no-git-tag-version
-            echo "   ✅ Electron 앱 버전: $VERSION"
-            cd ..
-
-            # VitePress 문서 버전 링크 업데이트
-            cd vitepress-app
-            node scripts/sync-version.js
-            echo "   ✅ VitePress 문서 버전 링크 업데이트: $VERSION"
-            cd ..
-          else
-            echo "❌ 태그가 없습니다. 태그 push가 필요합니다."
-            exit 1
-          fi
-
-      # deploy.sh 실행 권한 부여 및 실행
-      - name: Run deploy script
+      - name: Build and Deploy macOS App
         env:
-          # AWS 자격 증명 설정
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          # Apple 코드 사이닝 환경변수 설정
+          AWS_DEFAULT_REGION: ap-northeast-2
           APPLE_ID: ${{ secrets.APPLE_ID }}
           APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
-          # 인증서 설정 (base64 인코딩된 p12 파일)
           CSC_LINK: ${{ secrets.CSC_LINK }}
           CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
         run: |
           export NVM_DIR="$HOME/.nvm"
           [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
-          chmod +x deploy.sh
-          ./deploy.sh
+          cd electron-app
+          npm run deploy:mac
 
-      - name: Upload artifacts
+      - name: Upload macOS artifacts
         uses: actions/upload-artifact@v4
         with:
           name: macos-build-${{ github.ref_name }}
@@ -110,3 +83,102 @@ jobs:
             electron-app/dist/*.dmg
             electron-app/dist/*.zip
           retention-days: 30
+
+  # ===========================
+  # Job 2: Windows Build
+  # ===========================
+  deploy-windows:
+    name: Build and Deploy Windows App
+    runs-on: windows-latest
+    timeout-minutes: 60
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Install dependencies
+        run: |
+          cd electron-app
+          npm ci
+
+      - name: Extract version from tag and update package.json
+        shell: bash
+        run: |
+          VERSION=${GITHUB_REF_NAME#v}
+          echo "📦 Version: $VERSION"
+          cd electron-app
+          npm version $VERSION --no-git-tag-version
+
+      - name: Build and Deploy Windows App
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: ap-northeast-2
+          CSC_IDENTITY_AUTO_DISCOVERY: false  # Skip code signing
+        run: |
+          cd electron-app
+          npm run deploy:win
+
+      - name: Upload Windows artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-build-${{ github.ref_name }}
+          path: |
+            electron-app/dist/*.exe
+          retention-days: 30
+
+  # ===========================
+  # Job 3: VitePress Documentation
+  # ===========================
+  deploy-docs:
+    name: Build and Deploy Documentation
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    needs: [deploy-mac, deploy-windows]  # Runs after app builds complete (ensures download links are valid)
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Install dependencies
+        run: |
+          cd vitepress-app
+          npm ci
+
+      - name: Extract version and update docs
+        run: |
+          VERSION=${GITHUB_REF_NAME#v}
+          echo "📦 Version: $VERSION"
+          cd vitepress-app
+          node scripts/sync-version.js
+
+      - name: Build VitePress docs
+        run: |
+          cd vitepress-app
+          npm run docs:build
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ap-northeast-2
+
+      - name: Deploy to S3
+        run: |
+          cd vitepress-app
+          aws s3 sync .vitepress/dist s3://kira-releases --delete --exclude 'download/*' --exclude 'videos/*'
+
+      - name: Invalidate CloudFront cache
+        run: |
+          aws cloudfront create-invalidation --distribution-id EU03W5ZNSG0E --paths "/*"

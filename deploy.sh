@@ -70,19 +70,27 @@ echo "   ✅ Documentation updated to version $CURRENT_VERSION"
 echo ""
 
 # ===========================
-# 3. Build and Deploy Electron App
+# 3. Build and Deploy Electron App (macOS)
 # ===========================
-echo "🔨 Step 3: Build and Deploy Electron App to S3"
+echo "🔨 Step 3: Build and Deploy Electron App (macOS) to S3"
 cd electron-app
 npm run deploy
-echo "   ✅ Electron app deployment complete"
+echo "   ✅ macOS app deployment complete"
+echo ""
+
+# ===========================
+# 4. Build and Deploy Electron App (Windows)
+# ===========================
+echo "🔨 Step 4: Build and Deploy Electron App (Windows) to S3"
+CSC_IDENTITY_AUTO_DISCOVERY=false npm run deploy:win
+echo "   ✅ Windows app deployment complete"
 echo ""
 cd ..
 
 # ===========================
-# 4. Deploy VitePress Documentation
+# 5. Deploy VitePress Documentation
 # ===========================
-echo "📚 Step 4: Deploy VitePress Documentation"
+echo "📚 Step 5: Deploy VitePress Documentation"
 cd vitepress-app
 npm run docs:build
 aws s3 sync .vitepress/dist s3://kira-releases --delete --exclude 'download/*' --exclude 'videos/*'
@@ -91,9 +99,9 @@ echo ""
 cd ..
 
 # ===========================
-# 5. Invalidate CloudFront Cache
+# 6. Invalidate CloudFront Cache
 # ===========================
-echo "🔄 Step 5: Invalidate CloudFront Cache"
+echo "🔄 Step 6: Invalidate CloudFront Cache"
 aws cloudfront create-invalidation --distribution-id EU03W5ZNSG0E --paths "/*"
 echo "   ✅ CloudFront cache invalidation complete"
 echo ""
@@ -103,7 +111,8 @@ echo ""
 # ===========================
 echo "✨ Deployment complete!"
 echo ""
-echo "📦 Electron app: https://kira.krafton-ai.com/download/KIRA-$CURRENT_VERSION-arm64.dmg"
+echo "📦 Electron app (macOS): https://kira.krafton-ai.com/download/KIRA-$CURRENT_VERSION-arm64.dmg"
+echo "📦 Electron app (Windows): https://kira.krafton-ai.com/download/KIRA-$CURRENT_VERSION.exe"
 echo "📚 Documentation site: https://kira.krafton-ai.com"
 echo ""
 echo "🎉 Version $CURRENT_VERSION has been successfully deployed!"

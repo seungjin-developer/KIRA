@@ -10,6 +10,7 @@
     "build:win": "electron-builder --win",
     "build:linux": "electron-builder --linux",
     "deploy": "electron-builder --mac --publish always",
+    "deploy:mac": "electron-builder --mac --publish always",
     "deploy:win": "electron-builder --win --publish always"
   },
   "keywords": [
