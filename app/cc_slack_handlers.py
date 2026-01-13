@@ -128,6 +128,7 @@ async def _process_message_logic(message, client):
     user_text = message.get("text", "")
     message_ts = message.get("ts")
     thread_ts = message.get("thread_ts")
+    skip_ack_messages = message.get("skip_ack_messages", False)  # Skip approval/busy messages for scheduled tasks
 
     # Ignore specific channels
     IGNORED_CHANNELS = ["C01DPSN7NVB", "C0GCR4908"]
@@ -180,31 +181,32 @@ async def _process_message_logic(message, client):
             logging.info(f"[PROACTIVE_CONFIRM] Group channel detected, responding in thread")
 
         # Approval response message samples (selected by language)
-        original_text = original_message.get("user_text", "")
-        lang = detect_language(original_text)
+        if not skip_ack_messages:
+            original_text = original_message.get("user_text", "")
+            lang = detect_language(original_text)
 
-        if lang == "Korean":
-            approval_messages = [
-                "알겠습니다! 처리해드릴게요.",
-                "넵, 바로 확인해드릴게요.",
-                "네, 진행하겠습니다.",
-                "알겠어요. 처리하겠습니다.",
-                "확인했습니다. 바로 진행할게요."
-            ]
-        else:
-            approval_messages = [
-                "Got it! I'll take care of it.",
-                "Sure, I'll check on that right away.",
-                "Okay, I'll proceed.",
-                "Understood. I'll handle it.",
-                "Confirmed. I'll get started right away."
-            ]
+            if lang == "Korean":
+                approval_messages = [
+                    "알겠습니다! 처리해드릴게요.",
+                    "넵, 바로 확인해드릴게요.",
+                    "네, 진행하겠습니다.",
+                    "알겠어요. 처리하겠습니다.",
+                    "확인했습니다. 바로 진행할게요."
+                ]
+            else:
+                approval_messages = [
+                    "Got it! I'll take care of it.",
+                    "Sure, I'll check on that right away.",
+                    "Okay, I'll proceed.",
+                    "Understood. I'll handle it.",
+                    "Confirmed. I'll get started right away."
+                ]
 
-        await client.chat_postMessage(
-            channel=channel_id,
-            text=random.choice(approval_messages),
-            thread_ts=approval_thread_ts
-        )
+            await client.chat_postMessage(
+                channel=channel_id,
+                text=random.choice(approval_messages),
+                thread_ts=approval_thread_ts
+            )
 
         # Update original_message to current context (so operator responds in correct thread)
         original_message["message_ts"] = message_ts
@@ -296,47 +298,49 @@ Be sure to include **guidelines** and information (channel_id, user_id, user_nam
     if not is_authorized_user(user_name):
         logging.info(f"[UNAUTHORIZED] User '{user_name}'({user_id}) is not authorized, skipping message")
 
-        # Calculate thread_ts based on channel_type
-        channel_type = slack_data.get("channel", {}).get("channel_type", "")
-        if channel_type in ["public_channel", "private_channel", "group_dm"]:
-            # Group channel: always respond in thread
-            final_thread_ts = thread_ts or message_ts
-        elif channel_type in ["dm"]:
-            # DM/Group DM: respond in thread if thread_ts exists, otherwise normal message
-            final_thread_ts = thread_ts
-        else:
-            final_thread_ts = None
+        # Send busy message only if skip_ack_messages is False
+        if not skip_ack_messages:
+            # Calculate thread_ts based on channel_type
+            channel_type = slack_data.get("channel", {}).get("channel_type", "")
+            if channel_type in ["public_channel", "private_channel", "group_dm"]:
+                # Group channel: always respond in thread
+                final_thread_ts = thread_ts or message_ts
+            elif channel_type in ["dm"]:
+                # DM/Group DM: respond in thread if thread_ts exists, otherwise normal message
+                final_thread_ts = thread_ts
+            else:
+                final_thread_ts = None
 
-        # 바쁨 응답 메시지 샘플 (언어에 따라 선택)
-        lang = detect_language(user_text)
+            # 바쁨 응답 메시지 샘플 (언어에 따라 선택)
+            lang = detect_language(user_text)
 
-        if lang == "Korean":
-            busy_messages = [
-                "지금 급한 업무가 있어서 조금 있다가 답변드릴게요.",
-                "팀 업무로 바빠서 답변이 어렵습니다. 죄송합니다.",
-                "급한 일 처리 중이라 시간이 좀 걸릴 것 같아요.",
-                "지금은 다른 작업 중이라 나중에 확인하고 답변드릴게요.",
-                "업무 중이라 바로 답변이 어려울 것 같습니다. 조금만 기다려주세요."
-            ]
-        else:
-            busy_messages = [
-                "I'm busy with urgent work right now. I'll get back to you soon.",
-                "I'm tied up with team work at the moment. Sorry about that.",
-                "I'm handling something urgent, so it might take a while.",
-                "I'm working on something else right now. I'll check and respond later.",
-                "I'm in the middle of work, so I can't respond immediately. Please wait a moment."
-            ]
+            if lang == "Korean":
+                busy_messages = [
+                    "지금 급한 업무가 있어서 조금 있다가 답변드릴게요.",
+                    "팀 업무로 바빠서 답변이 어렵습니다. 죄송합니다.",
+                    "급한 일 처리 중이라 시간이 좀 걸릴 것 같아요.",
+                    "지금은 다른 작업 중이라 나중에 확인하고 답변드릴게요.",
+                    "업무 중이라 바로 답변이 어려울 것 같습니다. 조금만 기다려주세요."
+                ]
+            else:
+                busy_messages = [
+                    "I'm busy with urgent work right now. I'll get back to you soon.",
+                    "I'm tied up with team work at the moment. Sorry about that.",
+                    "I'm handling something urgent, so it might take a while.",
+                    "I'm working on something else right now. I'll check and respond later.",
+                    "I'm in the middle of work, so I can't respond immediately. Please wait a moment."
+                ]
 
-        # Send message
-        post_params = {
-            "channel": channel_id,
-            "text": random.choice(busy_messages)
-        }
+            # Send message
+            post_params = {
+                "channel": channel_id,
+                "text": random.choice(busy_messages)
+            }
 
-        if final_thread_ts:
-            post_params["thread_ts"] = final_thread_ts
+            if final_thread_ts:
+                post_params["thread_ts"] = final_thread_ts
 
-        await client.chat_postMessage(**post_params)
+            await client.chat_postMessage(**post_params)
         return
 
     # Memory retrieval (shared by simple_chat and orchestrator)

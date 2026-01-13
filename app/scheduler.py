@@ -109,6 +109,7 @@ async def reload_schedules_from_file():
                 "user": schedule.get("user"),
                 "text": schedule.get("text"),
                 "channel": schedule.get("channel"),
+                "skip_ack_messages": True,  # Skip approval/busy Slack messages for scheduled tasks
             }
             schedule_type = schedule.get("schedule_type")
             schedule_value = schedule.get("schedule_value")
